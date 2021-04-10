@@ -4,6 +4,7 @@
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score
+import smtplib
 from IPython.display import display
 from email.message import EmailMessage
 import numpy as np
@@ -71,63 +72,70 @@ class Allocation_system:
     def __init__(self, data):
         """data: Dictionary of user info"""
         self.user = data
+        self.predictedSiverity = 0
+        self.automatedSiverity = ""
+        self.predicteAllocation = ""
 
     def result(self):
         """return: String - Final Report String"""
-        params = []
-        params.append(float(user.data['sugar']))
-        params.append(float(user.data['insulin']))
-        params.append(float(user.data['exercise']))
-        params.append(float(user.data['diet']))
-        params.append(float(user.data['severe_disease']))
+        # params = []
+        # params.append(float(user.data['sugar']))
+        # params.append(float(user.data['insulin']))
+        # params.append(float(user.data['exercise']))
+        # params.append(float(user.data['diet']))
+        # params.append(float(user.data['severe_disease']))
         predictionSystem = Prediction_system("./data_raka.csv")
         predictionSystem.fit()
-        self.predictedSiverity = predictionSystem.predict(float(user.data['sugar']), float(user.data['insulin']), float(
-            user.data['exercise']), float(user.data['diet']), float(user.data['severe_disease']))
-        return predictedSiverity[0]
+        self.predictedSiverity = predictionSystem.predict(float(self.user['sugar']), float(self.user['insulin']), float(
+            self.user['exercise']), float(self.user['diet']), float(self.user['severe_disease']))[0]
+        return self.predictedSiverity
 
     def report(self):
-        automatedSiverity = ""
+        print(self.result())
         if(self.predictedSiverity == 1):
-            automatedSiverity = "1 - Low Chances of Re-addmitance"
+            self.automatedSiverity = "1 - Low Chances of Re-addmitance"
         elif(self.predictedSiverity == 2):
-            automatedSiverity = "2 - Medium Chances of Re-addmitance"
+            self.automatedSiverity = "2 - Medium Chances of Re-addmitance"
         elif(self.predictedSiverity == 3):
-            automatedSiverity = "3 - High Chances of Re-addmitance"
+            self.automatedSiverity = "3 - High Chances of Re-addmitance"
 
-        predicteAllocation = ""
+        if(((self.user['age'] > 60) and (self.predictedSiverity >= 2)) and (self.user["cardiac"] == 1)):
+            self.predicteAllocation = '''Ward Type : ICCU (Intensive Cardiac Care Unit)\n
+            Ward Boys/ Nurses : 2-3\n
+            Stretcher/Weelchair : Yes\n
+            Specialised Doctor : Yes\n'''
 
-        if(age > 60 & & self.predictedSiverity >= 2 & & self.data["cardiac"] == 1):
-            predicteAllocation = '''Ward Type : ICCU (Intensive Cardiac Care Unit)
-            Ward Boys/ Nurses : 2-3
-            Stretcher/Weelchair : Yes
-            Specialised Doctor : Yes'''
+        elif((self.user['age'] > 60) and (self.predictedSiverity >= 2)):
+            self.predicteAllocation = '''Ward Type : ICU (Intensive Care Unit)\n
+            Ward Boys/ Nurses : 2-3\n
+            Stretcher/Weelchair : Yes\n
+            Specialised Doctor : Yes\n'''
 
-        elif(age <= 60 & & self.predictedSiverity >= 2):
-            predicteAllocation = '''Ward Type : ICU (Intensive Care Unit)
-            Ward Boys/ Nurses : 2-3
-            Stretcher/Weelchair : No
-            Specialised Doctor : Yes'''
+        elif((self.user['age'] <= 60) and (self.predictedSiverity >= 2)):
+            self.predicteAllocation = '''Ward Type : ICU (Intensive Care Unit)\n
+            Ward Boys/ Nurses : 2-3\n
+            Stretcher/Weelchair : No\n
+            Specialised Doctor : Yes\n'''
 
-        elif(age <= 60 & & self.predictedSiverity < 2):
-            predicteAllocation = '''Ward Type : ICCU (Intensive Cardiac Care Unit)
-            Ward Boys/ Nurses : 1-2
-            Stretcher/Weelchair : No
-            Specialised Doctor : No'''
+        elif((self.user['age'] <= 60) and (self.predictedSiverity < 2)):
+            self.predicteAllocation = '''\n\tWard Type : ICCU (Intensive Cardiac Care Unit)\n\t
+            Ward Boys/ Nurses : 1-2\n\t
+            Stretcher/Weelchair : No\n\t
+            Specialised Doctor : No\n'''
 
-        return """
-        Name : {}
-        Gender : {}
-        Age : {}
-        Random Sugar Level : {} mg/dL
-        Insulin Dosage : {}
-        Exercise : {}
-        Diet : {}
-        Severe Disease : {}
-        Calculated Criticalness: {}
-        Predicted Allocation : {}
-        """.format(self.data['name'], self.data['gender'], self.data['age']. self.data['sugar'], self.data['insulin'], self.data['exercise'], self.data['diet'], self.data['severe_disease'], automatedSiverity, predicteAllocation)
-    }
+        r = """
+        Name : {}\n
+        Gender : {}\n
+        Age : {}\n
+        Random Sugar Level : {} mg/dL\n
+        Insulin Dosage : {}\n
+        Exercise : {}\n
+        Diet : {}\n
+        Severe Disease : {}\n
+        Calculated Criticalness: {}\n
+        Predicted Allocation : {}\n
+        """.format(self.user['name'], self.user['gender'], self.user['age'], self.user['sugar'], self.user['insulin'], self.user['exercise'], self.user['diet'], self.user['severe_disease'], self.automatedSiverity, self.predicteAllocation)
+        return r
 
     def verification(self):
         msg = EmailMessage()
@@ -149,3 +157,5 @@ class Allocation_system:
         elif(self.predictedSiverity >= 2):
             self.verification()
         return self.report()
+
+# %%

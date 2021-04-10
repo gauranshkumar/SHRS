@@ -1,5 +1,5 @@
 import streamlit as st
-
+from SHRS_core import Allocation_system
 import streamlit.components.v1 as components
 
 
@@ -80,6 +80,31 @@ else:
     cardiac = 0
 st.write(cardiac)
 
+if st.button("Check"):
+    Als = Allocation_system({"name": name,
+                             "gender": gender,
+                             "age": age,
+                             "sugar": sugar,
+                             "insulin": insulin,
+                             "exercise": exercise,
+                             "diet": diet,
+                             "severe_disease": severe_disease,
+                             "cardiac": cardiac
+                             })
+    st.warning(Als.submit())
+
+if st.button("Critical"):
+    Als = Allocation_system({"name": name,
+                             "gender": gender,
+                             "age": age,
+                             "sugar": sugar,
+                             "insulin": insulin,
+                             "exercise": exercise,
+                             "diet": diet,
+                             "severe_disease": severe_disease,
+                             "cardiac": cardiac
+                             })
+    st.warning(Als.submit(is_critical=True))
 # if st.button("Check")
 
 st.write("---------------")
